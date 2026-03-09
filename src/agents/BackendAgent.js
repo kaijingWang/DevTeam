@@ -19,7 +19,7 @@ class BackendAgent extends Agent {
 - ORM：Prisma
 
 代码要求：
-- 使用TypeScript
+- 使用TypeScript严格模式
 - 遵循RESTful规范
 - 完整的错误处理
 - 输入验证
@@ -63,7 +63,7 @@ ${techDoc.substring(0, 1000)}...
 
     const code = await this.chat(prompt);
     
-    // 解析并保存代码文件
+    // 使用统一的代码解析器
     const files = this.parseCodeBlocks(code);
     
     for (const [filename, content] of Object.entries(files)) {
@@ -74,49 +74,6 @@ ${techDoc.substring(0, 1000)}...
       files: Object.keys(files),
       summary: `生成了${Object.keys(files).length}个后端文件`
     };
-  }
-
-  parseCodeBlocks(text) {
-    const files = {};
-    const lines = text.split('\n');
-    
-    let currentFile = null;
-    let currentCode = [];
-    let inCodeBlock = false;
-    
-    for (const line of lines) {
-      // 检测文件名
-      if (line.includes('文件：') || line.includes('File:')) {
-        if (currentFile && currentCode.length > 0) {
-          files[currentFile] = currentCode.join('\n');
-        }
-        
-        const match = line.match(/[：:]\s*(.+)/);
-        if (match) {
-          currentFile = match[1].trim();
-          currentCode = [];
-          inCodeBlock = false;
-        }
-      }
-      // 检测代码块
-      else if (line.trim().startsWith('```')) {
-        inCodeBlock = !inCodeBlock;
-        if (!inCodeBlock && currentFile) {
-          // 代码块结束
-        }
-      }
-      // 收集代码
-      else if (inCodeBlock && currentFile) {
-        currentCode.push(line);
-      }
-    }
-    
-    // 保存最后一个文件
-    if (currentFile && currentCode.length > 0) {
-      files[currentFile] = currentCode.join('\n');
-    }
-    
-    return files;
   }
 }
 

@@ -58,7 +58,7 @@ ${apiDoc.substring(0, 2000)}...
 
     const code = await this.chat(prompt);
     
-    // 解析并保存代码文件
+    // 使用统一的代码解析器
     const files = this.parseCodeBlocks(code);
     
     for (const [filename, content] of Object.entries(files)) {
@@ -69,42 +69,6 @@ ${apiDoc.substring(0, 2000)}...
       files: Object.keys(files),
       summary: `生成了${Object.keys(files).length}个前端文件`
     };
-  }
-
-  parseCodeBlocks(text) {
-    const files = {};
-    const lines = text.split('\n');
-    
-    let currentFile = null;
-    let currentCode = [];
-    let inCodeBlock = false;
-    
-    for (const line of lines) {
-      if (line.includes('文件：') || line.includes('File:')) {
-        if (currentFile && currentCode.length > 0) {
-          files[currentFile] = currentCode.join('\n');
-        }
-        
-        const match = line.match(/[：:]\s*(.+)/);
-        if (match) {
-          currentFile = match[1].trim();
-          currentCode = [];
-          inCodeBlock = false;
-        }
-      }
-      else if (line.trim().startsWith('```')) {
-        inCodeBlock = !inCodeBlock;
-      }
-      else if (inCodeBlock && currentFile) {
-        currentCode.push(line);
-      }
-    }
-    
-    if (currentFile && currentCode.length > 0) {
-      files[currentFile] = currentCode.join('\n');
-    }
-    
-    return files;
   }
 }
 
