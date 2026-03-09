@@ -13,6 +13,13 @@ class Agent {
     this.role = role;
     this.llm = new ClaudeProvider();
     this.workspace = config.get('workspace').root;
+    this.isIncremental = false;
+    this.projectContext = null;
+  }
+
+  setIncrementalMode(projectContext) {
+    this.isIncremental = true;
+    this.projectContext = projectContext;
   }
 
   async execute(input) {

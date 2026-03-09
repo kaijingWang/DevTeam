@@ -9,6 +9,10 @@ const developCommand = new Command('dev')
   .option('-i, --interactive', '交互模式（每步询问）')
   .option('-s, --step', '步进模式（每步暂停）')
   .option('-a, --auto', '自动模式（无需确认）', true)
+  .option('--incremental', '增量开发模式（在现有项目上开发）')
+  .option('-p, --project-path <path>', '项目路径', '.')
+  .option('--analyze', '只分析项目，不生成代码')
+  .option('--dry-run', '预览将要生成的文件，不实际写入')
   .action(async (requirement, options) => {
     try {
       // 验证需求
@@ -24,9 +28,31 @@ const developCommand = new Command('dev')
                    options.interactive ? 'interactive' : 'auto';
       
       console.log(`模式: ${mode === 'auto' ? '自动' : mode === 'interactive' ? '交互' : '步进'}`);
+      
+      if (options.incremental) {
+        console.log(`项目模式: 增量开发`);
+        console.log(`项目路径: ${options.projectPath}`);
+      } else {
+        console.log(`项目模式: 新项目`);
+      }
+      
       console.log(`工作目录: ${config.get('workspace').root}`);
 
-      const orchestrator = new Orchestrator(mode);
+      // 只分析模式
+      if (options.analyze) {
+        const { ProjectAnalyzer } = require('../analyzer/ProjectAnalyzer');
+        const analyzer = new ProjectAnalyzer();
+        const context = await analyzer.analyze(options.projectPath);
+        console.log('\n' + analyzer.formatContext(context));
+        return;
+      }
+
+      const orchestrator = new Orchestrator(mode, {
+        incremental: options.incremental,
+        projectPath: options.projectPath,
+        dryRun: options.dryRun
+      });
+      
       await orchestrator.develop(validatedRequirement, options);
 
     } catch (error) {

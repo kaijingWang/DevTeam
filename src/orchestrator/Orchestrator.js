@@ -9,14 +9,17 @@ const { GitAgent } = require('../agents/GitAgent');
 const { InteractiveController } = require('../interactive/InteractiveController');
 const { MemoryStore } = require('../memory/MemoryStore');
 const { WorkflowStateManager } = require('../state/WorkflowStateManager');
+const { ProjectAnalyzer } = require('../analyzer/ProjectAnalyzer');
 
 class Orchestrator {
-  constructor(mode = 'auto') {
+  constructor(mode = 'auto', options = {}) {
     this.mode = mode;
     this.sessionId = this.generateSessionId();
     this.interactive = new InteractiveController();
     this.memory = new MemoryStore(this.sessionId);
     this.stateManager = null;
+    this.isIncremental = options.incremental || false;
+    this.projectContext = null;
     
     this.agents = {
       pm: new PMAgent(),
@@ -37,6 +40,27 @@ class Orchestrator {
     const results = {};
 
     try {
+      // 分析项目（增量模式）
+      if (this.isIncremental || options.incremental) {
+        console.log('\n🔍 分析现有项目...\n');
+        const analyzer = new ProjectAnalyzer();
+        this.projectContext = await analyzer.analyze(options.projectPath || '.');
+        
+        if (this.projectContext.isExisting) {
+          console.log('\n' + analyzer.formatContext(this.projectContext) + '\n');
+          
+          // 设置所有Agent为增量模式
+          Object.values(this.agents).forEach(agent => {
+            if (agent.setIncrementalMode) {
+              agent.setIncrementalMode(this.projectContext);
+            }
+          });
+        } else {
+          console.log('⚠️  未检测到现有项目，切换到新项目模式\n');
+          this.isIncremental = false;
+        }
+      }
+      
       // 检查是否可以恢复
       if (this.stateManager.canResume()) {
         const shouldResume = await this.askToResume();
