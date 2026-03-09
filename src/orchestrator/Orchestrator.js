@@ -6,9 +6,18 @@ const { BackendAgent } = require('../agents/BackendAgent');
 const { FrontendAgent } = require('../agents/FrontendAgent');
 const { QAAgent } = require('../agents/QAAgent');
 const { GitAgent } = require('../agents/GitAgent');
+const { InteractiveController } = require('../interactive/InteractiveController');
+const { MemoryStore } = require('../memory/MemoryStore');
+const { WorkflowStateManager } = require('../state/WorkflowStateManager');
 
 class Orchestrator {
-  constructor() {
+  constructor(mode = 'auto') {
+    this.mode = mode;
+    this.sessionId = this.generateSessionId();
+    this.interactive = new InteractiveController();
+    this.memory = new MemoryStore(this.sessionId);
+    this.stateManager = null;
+    
     this.agents = {
       pm: new PMAgent(),
       architect: new ArchitectAgent(),
@@ -22,50 +31,72 @@ class Orchestrator {
   }
 
   async develop(requirement, options = {}) {
+    this.stateManager = new WorkflowStateManager(this.sessionId, requirement);
+    
     const startTime = Date.now();
     const results = {};
 
     try {
-      // Step 1: PM分析需求
+      // 检查是否可以恢复
+      if (this.stateManager.canResume()) {
+        const shouldResume = await this.askToResume();
+        if (shouldResume) {
+          return await this.resume();
+        }
+      }
+
+      // Step 1: PM
+      await this.runStep('pm', 'PM', '产品经理分析需求', async () => {
+        results.pm = await this.agents.pm.execute({ requirement });
+        this.memory.add({
+          type: 'agent',
+          agent: 'pm',
+          content: results.pm
+        });
+        return results.pm;
+      }, results);
+
+      // Step 2: Architect
+      await this.runStep('architect', 'Architect', '架构师设计技术方案', async () => {
+        results.architect = await this.agents.architect.execute({
+          prd: results.pm.prd
+        });
+        this.memory.add({
+          type: 'agent',
+          agent: 'architect',
+          content: results.architect
+        });
+        return results.architect;
+      }, results);
+
+      // Step 3: UI Designer
+      await this.runStep('ui', 'UIDesigner', 'UI设计师设计界面', async () => {
+        results.ui = await this.agents.ui.execute({
+          prd: results.pm.prd
+        });
+        this.memory.add({
+          type: 'agent',
+          agent: 'ui',
+          content: results.ui
+        });
+        return results.ui;
+      }, results);
+
+      // Step 4: API Designer
+      await this.runStep('api', 'APIDesigner', '接口设计师设计API', async () => {
+        results.api = await this.agents.api.execute({
+          techDoc: results.architect.techDoc
+        });
+        this.memory.add({
+          type: 'agent',
+          agent: 'api',
+          content: results.api
+        });
+        return results.api;
+      }, results);
+
+      // Step 5-6: Backend & Frontend (并行)
       console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📋 Step 1/8: 产品经理分析需求');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-      
-      results.pm = await this.agents.pm.execute({ requirement });
-      console.log('✅ 需求文档已生成: docs/PRD.md\n');
-
-      // Step 2: 架构师设计方案
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🏗️  Step 2/8: 架构师设计技术方案');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-      
-      results.architect = await this.agents.architect.execute({
-        prd: results.pm.prd
-      });
-      console.log('✅ 技术方案已生成: docs/TECH.md\n');
-
-      // Step 3: UI设计
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🎨 Step 3/8: UI设计师设计界面');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-      
-      results.ui = await this.agents.ui.execute({
-        prd: results.pm.prd
-      });
-      console.log('✅ 设计文档已生成: design/DESIGN.md\n');
-
-      // Step 4: API设计
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📡 Step 4/8: 接口设计师设计API');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-      
-      results.api = await this.agents.api.execute({
-        techDoc: results.architect.techDoc
-      });
-      console.log('✅ API文档已生成: docs/API.md\n');
-
-      // Step 5 & 6: 并行开发后端和前端
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('👨‍💻 Step 5-6/8: 开发团队编写代码（并行）');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
       
@@ -85,40 +116,132 @@ class Orchestrator {
       results.backend = backendResult;
       results.frontend = frontendResult;
       
+      this.memory.add({ type: 'agent', agent: 'backend', content: results.backend });
+      this.memory.add({ type: 'agent', agent: 'frontend', content: results.frontend });
+      
       console.log(`✅ 后端代码已生成: ${results.backend.files.length}个文件`);
       console.log(`✅ 前端代码已生成: ${results.frontend.files.length}个文件\n`);
 
-      // Step 7: 测试
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🧪 Step 7/8: 测试工程师编写测试');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-      
-      results.qa = await this.agents.qa.execute({
-        apiDoc: results.api.apiDoc
-      });
-      console.log(`✅ 测试代码已生成: ${results.qa.files.length}个文件`);
-      console.log(`   ${results.qa.coverage}\n`);
+      if (this.mode === 'interactive') {
+        const action = await this.interactive.askToContinue({
+          preview: `后端: ${results.backend.files.length}个文件\n前端: ${results.frontend.files.length}个文件`
+        });
+        if (action === 'quit') {
+          this.pause();
+          return;
+        }
+      }
 
-      // Step 8: Git管理
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📦 Step 8/8: Git管理代码');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-      
-      results.git = await this.agents.git.execute({
-        requirement
-      });
-      console.log(`✅ ${results.git.summary}\n`);
+      // Step 7: QA
+      await this.runStep('qa', 'QA', '测试工程师编写测试', async () => {
+        results.qa = await this.agents.qa.execute({
+          apiDoc: results.api.apiDoc
+        });
+        this.memory.add({
+          type: 'agent',
+          agent: 'qa',
+          content: results.qa
+        });
+        return results.qa;
+      }, results);
 
-      // 总结
+      // Step 8: Git
+      await this.runStep('git', 'Git', 'Git管理代码', async () => {
+        results.git = await this.agents.git.execute({
+          requirement
+        });
+        this.memory.add({
+          type: 'agent',
+          agent: 'git',
+          content: results.git
+        });
+        return results.git;
+      }, results);
+
+      // 完成
+      this.stateManager.updateStatus('completed');
+      
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
       this.printSummary(results, duration);
 
       return results;
 
     } catch (error) {
+      this.stateManager.updateStatus('failed');
       console.error('\n❌ 错误:', error.message);
       throw error;
     }
+  }
+
+  async runStep(agentKey, agentName, stepName, executor, results) {
+    this.interactive.step++;
+    this.stateManager.nextStep(agentName);
+    
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`📋 Step ${this.interactive.step}/${this.interactive.totalSteps}: ${stepName}`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    
+    // 创建检查点
+    const checkpointId = this.stateManager.createCheckpoint(agentName, results);
+    
+    // 执行
+    const result = await executor();
+    
+    // 保存输出
+    this.stateManager.saveOutput(agentName, agentName, result);
+    
+    console.log(`✅ ${stepName}完成\n`);
+    
+    // 交互式模式
+    if (this.mode === 'interactive') {
+      const action = await this.interactive.askToContinue({
+        preview: result.summary || '已完成'
+      });
+      
+      if (action === 'quit') {
+        this.pause();
+        throw new Error('用户退出');
+      } else if (action === 'regenerate') {
+        return await this.runStep(agentKey, agentName, stepName, executor, results);
+      }
+    }
+    
+    return result;
+  }
+
+  async askToResume() {
+    const state = this.stateManager.getState();
+    
+    console.log('\n⚠️  发现未完成的会话\n');
+    console.log(`需求: ${state.requirement}`);
+    console.log(`进度: ${state.currentStep}/${state.totalSteps}`);
+    console.log(`当前Agent: ${state.currentAgent}\n`);
+    
+    return await this.interactive.confirmAction('是否继续之前的会话？');
+  }
+
+  async resume() {
+    console.log('\n🔄 恢复会话...\n');
+    
+    const state = this.stateManager.getState();
+    this.stateManager.updateStatus('running');
+    
+    console.log('✅ 已完成的步骤：\n');
+    Object.entries(state.outputs).forEach(([step, output]) => {
+      console.log(`  ${step}: ${output.agent}`);
+    });
+    console.log();
+    
+    // 从当前步骤继续
+    // TODO: 实现恢复逻辑
+    console.log('恢复功能开发中...');
+  }
+
+  pause() {
+    this.stateManager.updateStatus('paused');
+    console.log('\n⏸️  工作流已暂停');
+    console.log(`会话ID: ${this.sessionId}`);
+    console.log('使用 devteam resume 继续\n');
   }
 
   printSummary(results, duration) {
@@ -143,13 +266,18 @@ class Orchestrator {
     console.log(`    - 提交信息：${results.git.commitMessage}`);
     
     console.log(`\n⏱️  总耗时：${duration}秒`);
-    console.log(`📈 预计测试覆盖率：${results.qa.coverage}\n`);
+    console.log(`📈 预计测试覆盖率：${results.qa.coverage}`);
+    console.log(`💾 会话ID：${this.sessionId}\n`);
     
     console.log('💡 下一步：');
     console.log('  1. cd devteam-workspace');
     console.log('  2. npm install');
     console.log('  3. npm run dev');
     console.log();
+  }
+
+  generateSessionId() {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 }
 

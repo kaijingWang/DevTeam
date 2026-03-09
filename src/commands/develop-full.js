@@ -12,27 +12,30 @@ const developCommand = new Command('dev')
     try {
       // 检查配置
       const llmConfig = config.get('llm');
-      if (!llmConfig.apiKey) {
+      if (!llmConfig.apiKey || llmConfig.apiKey === 'test-key') {
         console.log('\n❌ 错误：未配置API密钥');
-        console.log('请先运行: node src/cli-simple.js config set llm.apiKey YOUR_API_KEY\n');
+        console.log('请先运行: devteam config set llm.apiKey YOUR_API_KEY\n');
         process.exit(1);
       }
 
-      console.log('\n╔═══════════════════════════════════════════════════════════╗');
-      console.log('║            🚀 DevTeam CLI 开始工作...                     ║');
-      console.log('╚═══════════════════════════════════════════════════════════╝');
       console.log(`\n需求: ${requirement}`);
-      console.log(`模式: ${options.step ? '步进' : options.interactive ? '交互' : '自动'}`);
+      
+      const mode = options.step ? 'step' : 
+                   options.interactive ? 'interactive' : 'auto';
+      
+      console.log(`模式: ${mode === 'auto' ? '自动' : mode === 'interactive' ? '交互' : '步进'}`);
       console.log(`工作目录: ${config.get('workspace').root}`);
 
-      const orchestrator = new Orchestrator();
+      const orchestrator = new Orchestrator(mode);
       await orchestrator.develop(requirement, options);
 
     } catch (error) {
-      console.error('\n❌ 错误:', error.message);
-      if (error.message.includes('API')) {
-        console.log('\n💡 提示：请检查API密钥是否正确');
-        console.log('设置API密钥: node src/cli-simple.js config set llm.apiKey YOUR_KEY\n');
+      if (error.message !== '用户退出') {
+        console.error('\n❌ 错误:', error.message);
+        if (error.message.includes('API')) {
+          console.log('\n💡 提示：请检查API密钥是否正确');
+          console.log('设置API密钥: devteam config set llm.apiKey YOUR_KEY\n');
+        }
       }
       process.exit(1);
     }
