@@ -1,8 +1,20 @@
 const fs = require('fs-extra');
 const path = require('path');
+const { AnalysisCache } = require('../cache/AnalysisCache');
 
 class DeepAnalyzer {
-  async analyze(projectPath) {
+  constructor() {
+    this.cache = new AnalysisCache();
+  }
+
+  async analyze(projectPath, options = {}) {
+    // 检查缓存
+    if (!options.skipCache) {
+      const cached = await this.cache.get(projectPath);
+      if (cached) {
+        return cached;
+      }
+    }
     const analysis = {
       basic: null,
       progress: null,
@@ -29,6 +41,11 @@ class DeepAnalyzer {
     
     // 生成建议
     analysis.suggestions = this.generateSuggestions(analysis);
+
+    // 保存到缓存
+    if (!options.skipCache) {
+      await this.cache.set(projectPath, analysis);
+    }
 
     return analysis;
   }

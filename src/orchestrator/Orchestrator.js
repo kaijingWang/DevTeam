@@ -41,36 +41,25 @@ class Orchestrator {
     const results = {};
 
     try {
-      // 自动扫描当前目录
-      console.log('\n🔍 扫描当前目录...\n');
-      const analyzer = new ProjectAnalyzer();
-      const basicContext = await analyzer.analyze(options.projectPath || '.');
-      
-      if (basicContext.isExisting) {
-        console.log('✓ 检测到现有项目\n');
+      // 分析项目（增量模式）
+      if (this.isIncremental || options.incremental) {
+        console.log('\n🔍 分析现有项目...\n');
+        const analyzer = new ProjectAnalyzer();
+        this.projectContext = await analyzer.analyze(options.projectPath || '.');
         
-        // 深度分析
-        console.log('🔍 正在深度分析项目...\n');
-        const deepAnalyzer = new DeepAnalyzer();
-        const deepAnalysis = await deepAnalyzer.analyze(options.projectPath || '.');
-        
-        // 显示分析报告
-        this.displayAnalysisReport(deepAnalysis);
-        
-        // 设置项目上下文
-        this.projectContext = basicContext;
-        this.isIncremental = true;
-        
-        // 设置所有Agent为增量模式
-        Object.values(this.agents).forEach(agent => {
-          if (agent.setIncrementalMode) {
-            agent.setIncrementalMode(this.projectContext);
-          }
-        });
-        
-        console.log('\n继续开发...\n');
-      } else {
-        console.log('✓ 新项目模式\n');
+        if (this.projectContext.isExisting) {
+          console.log('\n' + analyzer.formatContext(this.projectContext) + '\n');
+          
+          // 设置所有Agent为增量模式
+          Object.values(this.agents).forEach(agent => {
+            if (agent.setIncrementalMode) {
+              agent.setIncrementalMode(this.projectContext);
+            }
+          });
+        } else {
+          console.log('⚠️  未检测到现有项目，切换到新项目模式\n');
+          this.isIncremental = false;
+        }
       }
       
       // 检查是否可以恢复
@@ -315,9 +304,6 @@ class Orchestrator {
   generateSessionId() {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-}
-
-module.exports = { Orchestrator };
 
   displayAnalysisReport(analysis) {
     console.log('╔═══════════════════════════════════════════════════════════╗');
@@ -404,3 +390,6 @@ module.exports = { Orchestrator };
       console.log();
     }
   }
+}
+
+module.exports = { Orchestrator };

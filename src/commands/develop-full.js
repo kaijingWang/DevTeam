@@ -12,6 +12,7 @@ const developCommand = new Command('dev')
   .option('--incremental', '增量开发模式（在现有项目上开发）')
   .option('-p, --project-path <path>', '项目路径', '.')
   .option('--analyze', '只分析项目，不生成代码')
+  .option('--skip-cache', '跳过缓存，强制重新分析')
   .option('--dry-run', '预览将要生成的文件，不实际写入')
   .action(async (requirement, options) => {
     try {
