@@ -27,21 +27,26 @@ class Agent {
     throw new Error('execute() must be implemented by subclass');
   }
 
-  async chat(prompt, systemPrompt) {
+  async chat(prompt, systemPrompt, options = {}) {
+    const messages = [
+      {
+        role: 'system',
+        content: systemPrompt || this.getSystemPrompt()
+      },
+      {
+        role: 'user',
+        content: prompt
+      }
+    ];
+
+    // 如果启用流式输出
+    if (options.stream && options.onChunk) {
+      return await this.llm.chatStream(messages, options.onChunk);
+    }
+
     // 使用重试机制
     return await retry(
       async () => {
-        const messages = [
-          {
-            role: 'system',
-            content: systemPrompt || this.getSystemPrompt()
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ];
-
         return await this.llm.chat(messages);
       },
       {
