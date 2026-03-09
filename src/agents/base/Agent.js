@@ -1,5 +1,9 @@
 const { ClaudeProvider } = require('../../llm/ClaudeProvider');
 const { config } = require('../../config');
+const { Validator } = require('../../utils/validator');
+const { retry } = require('../../utils/retry');
+const { CodeParser } = require('../../utils/codeParser');
+const { CONSTANTS } = require('../../config/constants');
 const fs = require('fs-extra');
 const path = require('path');
 
@@ -12,22 +16,41 @@ class Agent {
   }
 
   async execute(input) {
+    // 子类必须实现
     throw new Error('execute() must be implemented by subclass');
   }
 
   async chat(prompt, systemPrompt) {
-    const messages = [
-      {
-        role: 'system',
-        content: systemPrompt || this.getSystemPrompt()
+    // 使用重试机制
+    return await retry(
+      async () => {
+        const messages = [
+          {
+            role: 'system',
+            content: systemPrompt || this.getSystemPrompt()
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ];
+
+        return await this.llm.chat(messages);
       },
       {
-        role: 'user',
-        content: prompt
+        maxRetries: 3,
+        delay: 1000,
+        onRetry: (attempt, maxRetries, error) => {
+          console.log(`  重试 ${attempt}/${maxRetries}: ${error.message}`);
+        },
+        shouldRetry: (error) => {
+          // 只重试网络错误和超时
+          return error.message.includes('API') || 
+                 error.message.includes('timeout') ||
+                 error.message.includes('ECONNRESET');
+        }
       }
-    ];
-
-    return await this.llm.chat(messages);
+    );
   }
 
   getSystemPrompt() {
@@ -35,18 +58,47 @@ class Agent {
   }
 
   async saveOutput(filename, content) {
-    const filepath = path.join(this.workspace, filename);
-    await fs.ensureDir(path.dirname(filepath));
-    await fs.writeFile(filepath, content, 'utf-8');
-    return filepath;
+    try {
+      // 验证文件名
+      if (!filename || typeof filename !== 'string') {
+        throw new Error('文件名无效');
+      }
+      
+      // 验证内容
+      if (content === null || content === undefined) {
+        throw new Error('文件内容不能为空');
+      }
+      
+      const filepath = path.join(this.workspace, filename);
+      await fs.ensureDir(path.dirname(filepath));
+      await fs.writeFile(filepath, content, 'utf-8');
+      
+      return filepath;
+    } catch (error) {
+      throw new Error(`保存文件失败: ${error.message}`);
+    }
   }
 
   async readOutput(filename) {
-    const filepath = path.join(this.workspace, filename);
-    if (await fs.pathExists(filepath)) {
-      return await fs.readFile(filepath, 'utf-8');
+    try {
+      const filepath = path.join(this.workspace, filename);
+      
+      if (await fs.pathExists(filepath)) {
+        return await fs.readFile(filepath, 'utf-8');
+      }
+      
+      return null;
+    } catch (error) {
+      throw new Error(`读取文件失败: ${error.message}`);
     }
-    return null;
+  }
+
+  parseCodeBlocks(text) {
+    return CodeParser.parseCodeBlocks(text);
+  }
+
+  extractSummary(text, maxLines = 10) {
+    return CodeParser.extractSummary(text, maxLines);
   }
 }
 
