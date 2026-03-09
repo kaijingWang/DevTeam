@@ -88,10 +88,17 @@ check_dependencies() {
     
     # 检查 git
     if ! command -v git &> /dev/null; then
-        print_warning "未安装 git (可选)"
-    else
-        print_success "git $(git --version | cut -d' ' -f3)"
+        print_error "未安装 git"
+        echo ""
+        echo "请先安装 git:"
+        echo "  macOS:   brew install git"
+        echo "  Linux:   sudo apt install git"
+        echo "  Windows: https://git-scm.com"
+        echo ""
+        exit 1
     fi
+    
+    print_success "git $(git --version | awk '{print $3}')"
 }
 
 # 安装 DevTeam CLI
@@ -101,59 +108,82 @@ install_devteam() {
     
     # 创建临时目录
     TEMP_DIR=$(mktemp -d)
-    cd "$TEMP_DIR"
+    print_info "临时目录: $TEMP_DIR"
+    
+    cd "$TEMP_DIR" || exit 1
     
     print_info "克隆仓库..."
+    echo ""
     
-    # 尝试克隆，显示详细错误
-    if git clone https://github.com/kaijingWang/DevTeam.git devteam-cli 2>&1; then
+    # 尝试克隆
+    if git clone https://github.com/kaijingWang/DevTeam.git devteam-cli; then
         print_success "仓库克隆完成"
     else
         print_error "克隆失败"
         echo ""
-        print_info "可能的原因："
+        print_warning "可能的原因："
         echo "  1. 网络连接问题"
         echo "  2. GitHub 访问受限"
-        echo "  3. 未安装 git"
         echo ""
         print_info "解决方案："
-        echo "  1. 检查网络连接"
-        echo "  2. 使用代理或 VPN"
-        echo "  3. 手动安装："
         echo ""
-        echo "     git clone https://github.com/kaijingWang/DevTeam.git"
-        echo "     cd DevTeam"
-        echo "     npm install"
-        echo "     npm link"
+        echo "方案1: 配置代理"
+        echo "  git config --global http.proxy http://127.0.0.1:7890"
+        echo "  git config --global https.proxy http://127.0.0.1:7890"
         echo ""
+        echo "方案2: 手动安装"
+        echo "  git clone https://github.com/kaijingWang/DevTeam.git"
+        echo "  cd DevTeam"
+        echo "  npm install"
+        echo "  npm link"
+        echo ""
+        echo "方案3: 下载 ZIP"
+        echo "  https://github.com/kaijingWang/DevTeam/archive/refs/heads/main.zip"
+        echo ""
+        
+        # 清理
+        cd ~ || exit 1
+        rm -rf "$TEMP_DIR"
         exit 1
     fi
     
-    cd devteam-cli
+    cd devteam-cli || exit 1
     
+    echo ""
     print_info "安装依赖..."
-    if npm install --production 2>&1; then
+    echo ""
+    
+    if npm install --production; then
         print_success "依赖安装完成"
     else
         print_error "依赖安装失败"
         echo ""
         print_info "尝试清理缓存后重试..."
         npm cache clean --force
+        
         if npm install --production; then
             print_success "依赖安装完成"
         else
             print_error "安装失败"
+            echo ""
+            print_info "请尝试手动安装："
+            echo "  cd $TEMP_DIR/devteam-cli"
+            echo "  npm install"
+            echo "  npm link"
             exit 1
         fi
     fi
     
+    echo ""
     print_info "全局安装..."
-    if npm link 2>&1; then
+    echo ""
+    
+    if npm link; then
         print_success "全局安装完成"
     else
-        print_error "全局安装失败"
-        print_info "尝试使用 sudo..."
-        if sudo npm link 2>&1; then
+        print_warning "全局安装失败，尝试使用 sudo..."
+        
+        if sudo npm link; then
             print_success "全局安装完成 (sudo)"
         else
             print_error "安装失败"
@@ -166,10 +196,32 @@ install_devteam() {
     fi
     
     # 清理临时目录
-    cd ~
+    cd ~ || exit 1
     rm -rf "$TEMP_DIR"
     
+    echo ""
     print_success "DevTeam CLI 安装完成！"
+}
+
+# 验证安装
+verify_installation() {
+    echo ""
+    print_info "验证安装..."
+    
+    if command -v devteam &> /dev/null; then
+        print_success "devteam 命令可用"
+        echo ""
+        devteam --version
+    else
+        print_warning "devteam 命令未找到"
+        echo ""
+        print_info "可能需要重新加载 shell:"
+        echo "  source ~/.bashrc  # 或 ~/.zshrc"
+        echo ""
+        print_info "或者检查 PATH:"
+        echo "  echo \$PATH"
+        echo "  npm config get prefix"
+    fi
 }
 
 # 配置向导
@@ -186,8 +238,11 @@ configure_devteam() {
         read -p "请输入你的 Claude API Key: " API_KEY
         
         if [ -n "$API_KEY" ]; then
-            devteam config set llm.apiKey "$API_KEY"
-            print_success "API Key 已配置"
+            if devteam config set llm.apiKey "$API_KEY"; then
+                print_success "API Key 已配置"
+            else
+                print_warning "配置失败，请稍后手动配置"
+            fi
         else
             print_warning "未输入 API Key，跳过配置"
         fi
@@ -241,6 +296,7 @@ main() {
     check_dependencies
     echo ""
     install_devteam
+    verify_installation
     configure_devteam
     show_usage
 }
