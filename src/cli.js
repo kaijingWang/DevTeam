@@ -13,12 +13,14 @@ const { docsCommand } = require('./commands/docs');
 const { pluginCommand } = require('./commands/plugin');
 const { pairCommand } = require('./commands/pair');
 const { learnCommand } = require('./commands/learn');
+const { chatCommand } = require('./commands/chat');
+const { ChatMode } = require('./chat/ChatMode');
 
 const program = new Command();
 
 console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║            DevTeam CLI - v2.0.0                           ║
+║            DevTeam CLI - v2.0.1                           ║
 ║            AI-Powered Development Team                    ║
 ║                                                           ║
 ║  🎯 PM  🏗️ Architect  🎨 UI  📡 API                      ║
@@ -30,8 +32,10 @@ console.log(`
 program
   .name('devteam')
   .description('AI-powered development team in your terminal')
-  .version('2.0.0');
+  .version('2.0.1');
 
+// 添加所有命令
+program.addCommand(chatCommand);
 program.addCommand(configCommand);
 program.addCommand(developCommand);
 program.addCommand(resumeCommand);
@@ -47,6 +51,11 @@ program.addCommand(learnCommand);
 
 program.parse(process.argv);
 
+// 如果没有参数，进入对话模式
 if (!process.argv.slice(2).length) {
-  program.outputHelp();
+  const chat = new ChatMode();
+  chat.start().catch(error => {
+    console.error('\n❌ 错误:', error.message, '\n');
+    process.exit(1);
+  });
 }
