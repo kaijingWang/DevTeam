@@ -8,12 +8,14 @@ const { sessionsCommand } = require('./commands/sessions');
 const { cacheCommand } = require('./commands/cache');
 const { templateCommand } = require('./commands/template');
 const { reviewCommand } = require('./commands/review');
+const { fixCommand } = require('./commands/fix');
+const { docsCommand } = require('./commands/docs');
 
 const program = new Command();
 
 console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║            DevTeam CLI - v1.3.0                           ║
+║            DevTeam CLI - v1.4.0                           ║
 ║            AI-Powered Development Team                    ║
 ║                                                           ║
 ║  🎯 PM  🏗️ Architect  🎨 UI  📡 API                      ║
@@ -24,7 +26,7 @@ console.log(`
 program
   .name('devteam')
   .description('AI-powered development team in your terminal')
-  .version('1.3.0');
+  .version('1.4.0');
 
 program.addCommand(configCommand);
 program.addCommand(developCommand);
@@ -33,6 +35,8 @@ program.addCommand(sessionsCommand);
 program.addCommand(cacheCommand);
 program.addCommand(templateCommand);
 program.addCommand(reviewCommand);
+program.addCommand(fixCommand);
+program.addCommand(docsCommand);
 
 program.parse(process.argv);
 
