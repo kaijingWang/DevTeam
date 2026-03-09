@@ -10,6 +10,7 @@ const { InteractiveController } = require('../interactive/InteractiveController'
 const { MemoryStore } = require('../memory/MemoryStore');
 const { WorkflowStateManager } = require('../state/WorkflowStateManager');
 const { ProjectAnalyzer } = require('../analyzer/ProjectAnalyzer');
+const { DeepAnalyzer } = require('../analyzer/DeepAnalyzer');
 
 class Orchestrator {
   constructor(mode = 'auto', options = {}) {
@@ -40,25 +41,36 @@ class Orchestrator {
     const results = {};
 
     try {
-      // 分析项目（增量模式）
-      if (this.isIncremental || options.incremental) {
-        console.log('\n🔍 分析现有项目...\n');
-        const analyzer = new ProjectAnalyzer();
-        this.projectContext = await analyzer.analyze(options.projectPath || '.');
+      // 自动扫描当前目录
+      console.log('\n🔍 扫描当前目录...\n');
+      const analyzer = new ProjectAnalyzer();
+      const basicContext = await analyzer.analyze(options.projectPath || '.');
+      
+      if (basicContext.isExisting) {
+        console.log('✓ 检测到现有项目\n');
         
-        if (this.projectContext.isExisting) {
-          console.log('\n' + analyzer.formatContext(this.projectContext) + '\n');
-          
-          // 设置所有Agent为增量模式
-          Object.values(this.agents).forEach(agent => {
-            if (agent.setIncrementalMode) {
-              agent.setIncrementalMode(this.projectContext);
-            }
-          });
-        } else {
-          console.log('⚠️  未检测到现有项目，切换到新项目模式\n');
-          this.isIncremental = false;
-        }
+        // 深度分析
+        console.log('🔍 正在深度分析项目...\n');
+        const deepAnalyzer = new DeepAnalyzer();
+        const deepAnalysis = await deepAnalyzer.analyze(options.projectPath || '.');
+        
+        // 显示分析报告
+        this.displayAnalysisReport(deepAnalysis);
+        
+        // 设置项目上下文
+        this.projectContext = basicContext;
+        this.isIncremental = true;
+        
+        // 设置所有Agent为增量模式
+        Object.values(this.agents).forEach(agent => {
+          if (agent.setIncrementalMode) {
+            agent.setIncrementalMode(this.projectContext);
+          }
+        });
+        
+        console.log('\n继续开发...\n');
+      } else {
+        console.log('✓ 新项目模式\n');
       }
       
       // 检查是否可以恢复
@@ -306,3 +318,89 @@ class Orchestrator {
 }
 
 module.exports = { Orchestrator };
+
+  displayAnalysisReport(analysis) {
+    console.log('╔═══════════════════════════════════════════════════════════╗');
+    console.log('║                    项目分析报告                           ║');
+    console.log('╚═══════════════════════════════════════════════════════════╝\n');
+    
+    // 基础信息
+    if (analysis.basic) {
+      console.log('📊 基础信息:');
+      console.log(`  项目类型: ${analysis.basic.type}`);
+      const techStack = Object.values(analysis.basic.techStack).join(', ');
+      if (techStack) {
+        console.log(`  技术栈: ${techStack}`);
+      }
+      console.log(`  代码规模: ${analysis.basic.fileCount}个文件, ${analysis.basic.lineCount}行代码\n`);
+    }
+    
+    // 开发进度
+    if (analysis.progress) {
+      console.log('📈 开发进度:');
+      console.log(`  完成度: ${analysis.progress.completionRate}%`);
+      console.log(`  已完成: ${analysis.progress.completedModules.length}个模块`);
+      if (analysis.progress.todoModules.length > 0) {
+        console.log(`  待开发: ${analysis.progress.todoModules.length}个TODO\n`);
+      } else {
+        console.log();
+      }
+    }
+    
+    // 代码质量
+    if (analysis.quality) {
+      console.log('✨ 代码质量:');
+      console.log(`  质量分数: ${analysis.quality.score}/100`);
+      if (analysis.quality.lintIssues.length > 0) {
+        console.log(`  ⚠️  代码规范: ${analysis.quality.lintIssues.length}个问题`);
+      }
+      if (analysis.quality.securityIssues.length > 0) {
+        console.log(`  ⚠️  安全问题: ${analysis.quality.securityIssues.length}个`);
+      }
+      console.log();
+    }
+    
+    // 潜在问题
+    if (analysis.issues && analysis.issues.length > 0) {
+      console.log('🐛 潜在问题:');
+      const critical = analysis.issues.filter(i => i.severity === 'critical');
+      const high = analysis.issues.filter(i => i.severity === 'high');
+      const medium = analysis.issues.filter(i => i.severity === 'medium');
+      
+      if (critical.length > 0) {
+        console.log(`  🔴 严重: ${critical.length}个`);
+        critical.slice(0, 3).forEach(i => {
+          console.log(`     - ${i.message}`);
+        });
+      }
+      if (high.length > 0) {
+        console.log(`  🟠 重要: ${high.length}个`);
+      }
+      if (medium.length > 0) {
+        console.log(`  🟡 一般: ${medium.length}个`);
+      }
+      console.log();
+    }
+    
+    // 缺失功能
+    if (analysis.missing && analysis.missing.length > 0) {
+      console.log('📋 缺失内容:');
+      analysis.missing.slice(0, 5).forEach(m => {
+        const icon = m.severity === 'high' ? '🔴' : 
+                     m.severity === 'medium' ? '🟡' : '⚪';
+        console.log(`  ${icon} ${m.name}`);
+      });
+      console.log();
+    }
+    
+    // 建议
+    if (analysis.suggestions && analysis.suggestions.length > 0) {
+      console.log('💡 建议:');
+      analysis.suggestions.slice(0, 5).forEach((s, i) => {
+        const icon = s.priority === 'critical' ? '🔴' : 
+                     s.priority === 'high' ? '🟠' : '🟡';
+        console.log(`  ${i + 1}. ${icon} ${s.message}`);
+      });
+      console.log();
+    }
+  }
