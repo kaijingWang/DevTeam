@@ -104,33 +104,63 @@ install_devteam() {
     cd "$TEMP_DIR"
     
     print_info "克隆仓库..."
-    if git clone https://github.com/kaijingWang/DevTeam.git devteam-cli 2>&1 | grep -v "Cloning"; then
+    
+    # 尝试克隆，显示详细错误
+    if git clone https://github.com/kaijingWang/DevTeam.git devteam-cli 2>&1; then
         print_success "仓库克隆完成"
     else
         print_error "克隆失败"
+        echo ""
+        print_info "可能的原因："
+        echo "  1. 网络连接问题"
+        echo "  2. GitHub 访问受限"
+        echo "  3. 未安装 git"
+        echo ""
+        print_info "解决方案："
+        echo "  1. 检查网络连接"
+        echo "  2. 使用代理或 VPN"
+        echo "  3. 手动安装："
+        echo ""
+        echo "     git clone https://github.com/kaijingWang/DevTeam.git"
+        echo "     cd DevTeam"
+        echo "     npm install"
+        echo "     npm link"
+        echo ""
         exit 1
     fi
     
     cd devteam-cli
     
     print_info "安装依赖..."
-    if npm install --production --silent; then
+    if npm install --production 2>&1; then
         print_success "依赖安装完成"
     else
         print_error "依赖安装失败"
-        exit 1
+        echo ""
+        print_info "尝试清理缓存后重试..."
+        npm cache clean --force
+        if npm install --production; then
+            print_success "依赖安装完成"
+        else
+            print_error "安装失败"
+            exit 1
+        fi
     fi
     
     print_info "全局安装..."
-    if npm link 2>&1 | grep -v "npm WARN"; then
+    if npm link 2>&1; then
         print_success "全局安装完成"
     else
         print_error "全局安装失败"
         print_info "尝试使用 sudo..."
-        if sudo npm link; then
+        if sudo npm link 2>&1; then
             print_success "全局安装完成 (sudo)"
         else
             print_error "安装失败"
+            echo ""
+            print_info "请尝试手动安装："
+            echo "  cd $TEMP_DIR/devteam-cli"
+            echo "  sudo npm link"
             exit 1
         fi
     fi

@@ -152,6 +152,52 @@ devteam resume              # 恢复会话
 
 ## 🔧 故障排除
 
+### 克隆失败
+
+**问题**: `✗ 克隆失败`
+
+**原因**:
+1. 网络连接问题
+2. GitHub 访问受限（中国大陆）
+3. 未安装 git
+
+**解决方案**:
+
+**方案1: 使用代理**
+```bash
+# 设置 git 代理
+git config --global http.proxy http://127.0.0.1:7890
+git config --global https.proxy http://127.0.0.1:7890
+
+# 然后重新运行安装脚本
+```
+
+**方案2: 使用 GitHub 镜像**
+```bash
+# 使用 Gitee 镜像（如果有）
+git clone https://gitee.com/kaijingWang/DevTeam.git
+cd DevTeam
+npm install
+npm link
+```
+
+**方案3: 手动下载**
+```bash
+# 1. 访问 GitHub 下载 ZIP
+https://github.com/kaijingWang/DevTeam/archive/refs/heads/main.zip
+
+# 2. 解压并安装
+unzip DevTeam-main.zip
+cd DevTeam-main
+npm install
+npm link
+```
+
+**方案4: 使用简化安装脚本**
+```bash
+curl -fsSL https://raw.githubusercontent.com/kaijingWang/DevTeam/main/install-simple.sh | bash
+```
+
 ### 权限错误
 
 **macOS/Linux:**
