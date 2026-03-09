@@ -35,9 +35,25 @@ DevTeam CLI是一个革命性的AI开发工具，通过8个专业Agent协作，�
 
 ## 📦 安装
 
+### 一键安装（推荐）
+
+**macOS / Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/kaijingWang/DevTeam/main/install.sh | bash
+```
+
+**Windows:**
+```powershell
+irm https://raw.githubusercontent.com/kaijingWang/DevTeam/main/install.bat | iex
+```
+
+### 手动安装
+
 ```bash
 npm install -g devteam-cli
 ```
+
+详细安装说明: [INSTALL.md](./INSTALL.md)
 
 ## 🎬 快速开始
 
