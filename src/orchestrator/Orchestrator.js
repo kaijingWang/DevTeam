@@ -11,6 +11,7 @@ const { MemoryStore } = require('../memory/MemoryStore');
 const { WorkflowStateManager } = require('../state/WorkflowStateManager');
 const { ProjectAnalyzer } = require('../analyzer/ProjectAnalyzer');
 const { DeepAnalyzer } = require('../analyzer/DeepAnalyzer');
+const { CodeReviewer } = require('../utils/codeReviewer');
 
 class Orchestrator {
   constructor(mode = 'auto', options = {}) {
@@ -21,6 +22,8 @@ class Orchestrator {
     this.stateManager = null;
     this.isIncremental = options.incremental || false;
     this.projectContext = null;
+    this.codeReviewer = new CodeReviewer();
+    this.enableStreaming = options.streaming !== false; // 默认启用流式
     
     this.agents = {
       pm: new PMAgent(),

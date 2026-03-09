@@ -1,0 +1,14 @@
+{
+  "name": "react-app",
+  "description": "React SPA 应用模板",
+  "author": "DevTeam CLI",
+  "version": "1.0.0",
+  "features": [
+    "React 18",
+    "TypeScript",
+    "Vite",
+    "React Router",
+    "Tailwind CSS",
+    "ESLint + Prettier"
+  ]
+}

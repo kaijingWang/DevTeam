@@ -1,0 +1,14 @@
+{
+  "name": "nextjs-app",
+  "description": "Next.js 全栈应用模板",
+  "author": "DevTeam CLI",
+  "version": "1.0.0",
+  "features": [
+    "Next.js 14",
+    "TypeScript",
+    "App Router",
+    "Tailwind CSS",
+    "Server Components",
+    "API Routes"
+  ]
+}
