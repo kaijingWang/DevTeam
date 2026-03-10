@@ -61,7 +61,15 @@ ${techDoc.substring(0, 1000)}...
 
 请生成所有文件的代码。`;
 
-    const code = await this.chat(prompt);
+    let code = "";
+    await this.chat(prompt, null, {
+      stream: true,
+      onChunk: (chunk) => {
+        process.stdout.write(chunk);
+        code += chunk;
+      }
+    });
+    console.log("\n");
     
     // 使用统一的代码解析器
     const files = this.parseCodeBlocks(code);

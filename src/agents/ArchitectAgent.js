@@ -94,7 +94,15 @@ CREATE TABLE users (
 
 请生成完整的技术方案文档。`;
 
-    const techDoc = await this.chat(prompt);
+    let techDoc = "";
+    await this.chat(prompt, null, {
+      stream: true,
+      onChunk: (chunk) => {
+        process.stdout.write(chunk);
+        techDoc += chunk;
+      }
+    });
+    console.log("\n");
     
     // 保存技术方案
     await this.saveOutput('docs/TECH.md', techDoc);

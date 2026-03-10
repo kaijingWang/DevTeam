@@ -112,7 +112,15 @@ module.exports = {
 
 请生成完整的设计文档。`;
 
-    const designDoc = await this.chat(prompt);
+    let designDoc = "";
+    await this.chat(prompt, null, {
+      stream: true,
+      onChunk: (chunk) => {
+        process.stdout.write(chunk);
+        designDoc += chunk;
+      }
+    });
+    console.log("\n");
     
     // 保存设计文档
     await this.saveOutput('design/DESIGN.md', designDoc);

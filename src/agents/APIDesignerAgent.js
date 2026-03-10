@@ -104,7 +104,15 @@ interface User {
 
 请生成完整的API文档。`;
 
-    const apiDoc = await this.chat(prompt);
+    let apiDoc = "";
+    await this.chat(prompt, null, {
+      stream: true,
+      onChunk: (chunk) => {
+        process.stdout.write(chunk);
+        apiDoc += chunk;
+      }
+    });
+    console.log("\n");
     
     // 保存API文档
     await this.saveOutput('docs/API.md', apiDoc);

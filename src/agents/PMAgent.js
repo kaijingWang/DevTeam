@@ -67,7 +67,17 @@ PRD文档应包含：
 
 请生成完整的PRD文档。`;
 
-    const prd = await this.chat(prompt);
+    // 使用流式输出
+    let prd = '';
+    await this.chat(prompt, null, {
+      stream: true,
+      onChunk: (chunk) => {
+        process.stdout.write(chunk);
+        prd += chunk;
+      }
+    });
+    
+    console.log('\n');
     
     // 保存PRD
     await this.saveOutput('docs/PRD.md', prd);

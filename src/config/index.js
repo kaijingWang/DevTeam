@@ -15,7 +15,19 @@ class ConfigManager {
       fs.ensureDirSync(this.configDir);
       
       if (fs.existsSync(this.configFile)) {
-        return fs.readJsonSync(this.configFile);
+        const config = fs.readJsonSync(this.configFile);
+        
+        // 确保数字类型正确
+        if (config.llm) {
+          if (config.llm.maxTokens) {
+            config.llm.maxTokens = Number(config.llm.maxTokens);
+          }
+          if (config.llm.temperature) {
+            config.llm.temperature = Number(config.llm.temperature);
+          }
+        }
+        
+        return config;
       }
       
       // 使用默认配置
@@ -62,7 +74,13 @@ class ConfigManager {
       obj = obj[k];
     }
     
-    obj[keys[keys.length - 1]] = value;
+    // 类型转换：确保数字类型正确
+    let finalValue = value;
+    if (key === 'llm.maxTokens' || key === 'llm.temperature') {
+      finalValue = Number(value);
+    }
+    
+    obj[keys[keys.length - 1]] = finalValue;
     this.save();
   }
 
