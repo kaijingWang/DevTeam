@@ -1,10 +1,11 @@
 {
   "name": "devteam-cli",
-  "version": "2.0.1",
-  "description": "AI-powered development team in your terminal",
+  "version": "3.0.0",
+  "description": "AI-powered development team in your terminal - v3.0 with parallel execution and iteration optimization",
   "main": "src/index.js",
   "bin": {
-    "devteam": "src/cli.js"
+    "devteam": "src/cli-v3.js",
+    "devteam-v2": "src/cli.js"
   },
   "scripts": {
     "dev": "node src/cli.js",
