@@ -1,385 +1,308 @@
-# DevTeam CLI
+# DevTeam CLI v3.0
 
-> 一句话，组建你的AI开发团队
+> AI驱动的开发团队，在你的终端里
 
-[![npm version](https://img.shields.io/npm/v/devteam-cli.svg)](https://www.npmjs.com/package/devteam-cli)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/kaijingWang/DevTeam)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## ✨ 特性
+## ✨ v3.0 新特性
 
-DevTeam CLI是一个革命性的AI开发工具，通过8个专业Agent协作，自动完成从需求到代码的全流程开发。
+- 🚀 **智能并行执行** - 3-5x加速，多Agent同时工作
+- 🔄 **迭代优化系统** - 自动修复Bug直到完成
+- 🎨 **交互式UI优化** - 根据反馈不断改进
+- 🔧 **自动代码修复** - 解决常见问题
+- ✅ **代码质量验证** - TypeScript、ESLint、构建检查
+- 📦 **项目模板系统** - React + Vite + TypeScript
+- 💾 **智能缓存** - 24小时缓存，减少API调用
+- 🔌 **连接池** - TCP连接复用，提升速度
 
-### 🎯 8个专业Agent
+## 🎯 8个专业Agent
 
-| Agent | 角色 | 职责 |
-|-------|------|------|
-| 📋 PM | 产品经理 | 需求分析、PRD文档 |
-| 🏗️ Architect | 架构师 | 技术方案、架构设计 |
-| 🎨 UI Designer | UI/UX设计师 | 设计系统、界面设计 |
-| 📡 API Designer | 接口设计师 | API文档、接口规范 |
-| 👨‍💻 Backend | 后端工程师 | 后端代码生成 |
-| 🎨 Frontend | 前端工程师 | 前端代码生成 |
-| 🧪 QA | 测试工程师 | 测试代码生成 |
-| 📦 Git | DevOps工程师 | Git版本管理 |
-
-### 🚀 核心功能
-
-- ✅ **多Agent协作** - 8个Agent分工合作，专业高效
-- ✅ **完整文档** - 自动生成PRD、技术方案、API文档、设计文档
-- ✅ **代码生成** - 自动生成后端、前端、测试代码
-- ✅ **并行执行** - 后端和前端并行开发，节省时间
-- ✅ **交互模式** - 支持自动、交互、步进三种模式
-- ✅ **记忆系统** - Agent之间共享上下文
-- ✅ **状态管理** - 支持暂停/恢复，断点续传
-- ✅ **Git集成** - 自动初始化仓库并提交代码
+| Agent | 角色 | 职责 | v3.0增强 |
+|-------|------|------|----------|
+| 📋 PM | 产品经理 | 需求分析、PRD文档 | ✅ 更专业的PRD模板 |
+| 🏗️ Architect | 架构师 | 技术方案、架构设计 | ✅ 完整的技术架构 |
+| 🎨 UI Designer | UI/UX设计师 | 设计系统、界面设计 | ✅ 详细的Tailwind CSS |
+| 📡 API Designer | 接口设计师 | API文档、接口规范 | ✅ 完整的API文档 |
+| 👨‍💻 Backend | 后端工程师 | 后端代码生成 | ✅ 可运行的代码 |
+| 🎨 Frontend | 前端工程师 | 前端代码生成 | ✅ 可运行的代码 |
+| 🧪 QA | 测试工程师 | 测试代码生成 | ✅ 完整的测试 |
+| 📦 Git | DevOps工程师 | Git版本管理 | ✅ 自动提交 |
 
 ## 📦 安装
 
-### 一键安装（推荐）
-
-**macOS / Linux:**
-```bash
-curl -fsSL https://raw.githubusercontent.com/kaijingWang/DevTeam/main/install.sh | bash
-```
-
-**Windows:**
-```powershell
-irm https://raw.githubusercontent.com/kaijingWang/DevTeam/main/install.bat | iex
-```
-
-### 手动安装
+### 从GitHub安装（推荐）
 
 ```bash
-npm install -g devteam-cli
+# 1. 克隆仓库
+git clone https://github.com/kaijingWang/DevTeam.git
+cd DevTeam
+
+# 2. 安装依赖
+npm install
+
+# 3. 全局链接
+npm link
+
+# 4. 验证安装
+devteam --version
 ```
 
 详细安装说明: [INSTALL.md](./INSTALL.md)
 
-## 🎬 快速开始
+## 🚀 快速开始
 
-### 1. 配置API密钥
-
-```bash
-# 交互式配置（推荐）
-devteam config setup
-
-# 或直接设置
-devteam config set llm.apiKey YOUR_CLAUDE_API_KEY
-devteam config set llm.model claude-3-5-sonnet-20241022
-```
-
-### 2. 开发功能
+### 1. 配置API
 
 ```bash
-# 自动模式（全自动运行）
-devteam dev "用户登录功能"
-
-# 交互模式（每步询问）
-devteam dev "用户登录功能" --interactive
-
-# 步进模式（每步暂停）
-devteam dev "用户登录功能" --step
+devteam config set llm.apiKey YOUR_API_KEY
+devteam config set llm.model claude-sonnet-4-6
 ```
 
-### 3. 查看结果
+### 2. 选择开发模式
+
+#### 方式1：交互式菜单（推荐新手）
 
 ```bash
-cd devteam-workspace
-ls -la
-
-# 生成的文件：
-# docs/PRD.md - 需求文档
-# docs/TECH.md - 技术方案
-# docs/API.md - API文档
-# design/DESIGN.md - 设计文档
-# src/backend/ - 后端代码
-# src/frontend/ - 前端代码
-# tests/ - 测试代码
+devteam
+# 或
+devteam menu
 ```
 
-## 📖 使用指南
-
-### 命令列表
-
-#### config - 配置管理
+#### 方式2：并行开发（最快）
 
 ```bash
-devteam config setup          # 交互式配置向导
-devteam config list           # 查看当前配置
-devteam config set <key> <value>  # 设置配置项
-devteam config get <key>      # 获取配置项
-devteam config reset          # 重置配置
+devteam parallel "开发一个待办事项应用"
 ```
 
-#### dev - 开发功能
+#### 方式3：迭代开发（最可靠）
 
 ```bash
-devteam dev <requirement>     # 开发新功能
-  -i, --interactive           # 交互模式
-  -s, --step                  # 步进模式
-  -a, --auto                  # 自动模式（默认）
+devteam iterate "开发一个计算器" --max-iterations 10
 ```
 
-#### sessions - 会话管理
+#### 方式4：快速开发（一键完成）
 
 ```bash
-devteam sessions              # 查看所有会话
-devteam sessions clean        # 清理已完成的会话
-devteam sessions delete <id>  # 删除指定会话
+devteam quick "开发一个博客系统"
 ```
 
-#### resume - 恢复会话
+## 📚 核心命令
+
+### 开发命令
 
 ```bash
-devteam resume                # 恢复最近的会话
-devteam resume -s <id>        # 恢复指定会话
+# 并行开发（3-5x加速）
+devteam parallel "开发一个XXX"
+
+# 迭代开发（自动修复Bug）
+devteam iterate "开发一个XXX" --max-iterations 10
+
+# UI优化（交互式反馈）
+devteam refine --project-path ./my-project
+
+# 快速开发（一键完成）
+devteam quick "开发一个XXX"
 ```
+
+### 配置命令
+
+```bash
+devteam config list                    # 查看配置
+devteam config set <key> <value>       # 设置配置
+devteam cache stats                    # 查看缓存统计
+devteam cache clear                    # 清空缓存
+```
+
+## 🎨 生成的项目结构
+
+```
+devteam-workspace/
+├── docs/                      # 文档
+│   ├── PRD.md                # 产品需求文档
+│   ├── ARCHITECTURE.md       # 技术架构文档
+│   └── API.md                # API文档
+├── design/                    # 设计
+│   └── UI-DESIGN.md          # UI设计文档
+├── src/                       # 源代码
+│   ├── components/           # UI组件
+│   ├── hooks/                # 自定义Hooks
+│   ├── utils/                # 工具函数
+│   ├── types/                # 类型定义
+│   ├── App.tsx               # 主应用
+│   └── main.tsx              # 入口文件
+├── tests/                     # 测试
+│   ├── unit/                 # 单元测试
+│   └── integration/          # 集成测试
+├── package.json               # 依赖配置
+├── tsconfig.json              # TypeScript配置
+├── vite.config.ts             # Vite配置
+└── tailwind.config.js         # Tailwind配置
+```
+
+## 🔄 并行执行
+
+### 执行分组
+
+```
+第1组: PM Agent（必须先执行）
+第2组: Architect + UI Designer（并行）
+第3组: API Designer
+第4组: Backend + Frontend（并行）
+第5组: QA
+第6组: Git
+```
+
+### 性能对比
+
+| 模式 | 耗时 | 加速比 |
+|------|------|--------|
+| 顺序执行 | 240秒 | 1x |
+| 并行执行 | 80秒 | 3x |
+| 并行+缓存 | 50秒 | 4.8x |
+
+详细说明: [PARALLEL-GUIDE.md](./PARALLEL-GUIDE.md)
+
+## 🔄 迭代优化
 
 ### 工作流程
 
 ```
-用户输入需求
-    ↓
-📋 PM Agent → PRD文档
-    ↓
-🏗️ Architect Agent → 技术方案
-    ↓
-🎨 UI Designer Agent → 设计系统
-    ↓
-📡 API Designer Agent → API文档
-    ↓
-👨‍💻 Backend Agent + 🎨 Frontend Agent（并行）
-    ↓
-🧪 QA Agent → 测试代码
-    ↓
-📦 Git Agent → 提交代码
-    ↓
-🎉 完成！
+初始生成 → 验证 → 发现问题 → 分配Agent → 修复 → 再验证 → ...
 ```
+
+### 问题分类
+
+- TypeScript错误 → Frontend/Backend Agent
+- 构建错误 → Frontend Agent
+- 测试失败 → QA Agent
+- UI问题 → UI Designer Agent
+
+### 完成标准
+
+- ✅ 所有测试通过
+- ✅ 构建成功
+- ✅ 无TypeScript错误
+- ✅ 无ESLint错误
+
+详细说明: [ITERATION-GUIDE.md](./ITERATION-GUIDE.md)
 
 ## 💡 使用示例
 
-### 示例1：开发用户登录功能
+### 示例1：快速原型
 
 ```bash
-$ devteam dev "用户登录功能，支持用户名密码登录和手机号验证码登录"
-
-╔═══════════════════════════════════════════════════════════╗
-║            DevTeam CLI - v1.0.0                           ║
-║            AI-Powered Development Team                    ║
-╚═══════════════════════════════════════════════════════════╝
-
-需求: 用户登录功能，支持用户名密码登录和手机号验证码登录
-模式: 自动
-工作目录: ./devteam-workspace
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 Step 1/8: 产品经理分析需求
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  分析需求...
-✅ 需求文档已生成: docs/PRD.md
-
-[... 8个步骤 ...]
-
-🎉 开发完成！
-
-📊 生成文件：
-  📄 文档：4个
-  💻 代码：22个文件
-  📦 Git仓库已初始化
-
-⏱️  总耗时：45.3秒
+devteam quick "开发一个待办事项应用"
+cd devteam-workspace
+npm install
+npm run dev
 ```
 
-### 示例2：交互式开发
+### 示例2：高质量项目
 
 ```bash
-$ devteam dev "电商购物车功能" --interactive
-
-[... PM Agent完成 ...]
-
-✅ 需求文档已生成
-
-请选择操作:
-  ❯ 继续下一步
-    查看详情
-    重新生成
-    退出
-
-👤 选择: 查看详情
-
-═══════════════════════════════════════════════════════════
-需求文档预览
-═══════════════════════════════════════════════════════════
-# 产品需求文档 (PRD)
-
-## 1. 项目概述
-...
+devteam iterate "开发一个电商系统" --max-iterations 10
+cd devteam-workspace
+npm run build
+npm run preview
 ```
 
-## 🎨 输出示例
+### 示例3：UI精雕细琢
 
-### 生成的文档
+```bash
+# 先生成基础版本
+devteam dev "开发一个博客系统"
 
-#### docs/PRD.md
-```markdown
-# 产品需求文档 (PRD)
+# 交互式优化UI
+devteam refine
 
-## 1. 项目概述
-- 项目名称：用户登录系统
-- 目标用户：所有注册用户
-- 核心价值：提供安全便捷的登录方式
-
-## 2. 功能需求
-
-### 2.1 用户名密码登录
-- 功能描述：用户使用用户名和密码登录
-- 用户故事：作为用户，我希望能用用户名密码登录...
-- 验收标准：...
-- 优先级：P0
-
-...
+# 在交互中不断优化直到满意
 ```
 
-#### docs/TECH.md
-```markdown
-# 技术方案文档
+## 📊 效果对比
 
-## 1. 技术栈选型
+### v2.0（旧版）
 
-### 后端
-- 语言：TypeScript/Node.js
-- 框架：Express
-- 数据库：PostgreSQL
-- 缓存：Redis
+- ❌ 代码有错误
+- ❌ 文件名有问题
+- ❌ 缺少配置
+- ❌ 构建失败
+- ❌ 需要手动修复
 
-### 前端
-- 框架：React + TypeScript
-- 状态管理：React Hooks
-- UI库：Tailwind CSS
+### v3.0（新版）
 
-...
-```
-
-### 生成的代码
-
-#### src/backend/app.ts
-```typescript
-import express from 'express';
-import { authRouter } from './routes/auth';
-
-const app = express();
-
-app.use(express.json());
-app.use('/api/auth', authRouter);
-
-export default app;
-```
-
-#### src/frontend/pages/Login.tsx
-```typescript
-import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-
-export const Login: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const { login } = useAuth();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await login(username, password);
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      {/* ... */}
-    </form>
-  );
-};
-```
+- ✅ 代码可直接运行
+- ✅ 文件名正确
+- ✅ 配置完整
+- ✅ 构建成功
+- ✅ 自动修复和验证
+- ✅ 并行执行加速
+- ✅ 迭代优化闭环
 
 ## 🔧 配置
 
 ### 配置文件位置
 
-`~/.config/devteam-cli-nodejs/config.json`
+- Linux/Mac: `~/.devteam/config.json`
+- Windows: `%USERPROFILE%\.devteam\config.json`
 
 ### 配置示例
 
 ```json
 {
-  "version": "1.0.0",
   "llm": {
     "provider": "claude",
     "apiKey": "sk-ant-xxx",
-    "apiUrl": "https://api.anthropic.com",
-    "model": "claude-3-5-sonnet-20241022",
-    "maxTokens": 4096,
-    "temperature": 0.7,
-    "streaming": true
+    "model": "claude-sonnet-4-6",
+    "maxTokens": 8192,
+    "temperature": 0.7
   },
   "workspace": {
-    "root": "./devteam-workspace",
-    "docsDir": "docs",
-    "srcDir": "src",
-    "testsDir": "tests"
-  },
-  "agents": {
-    "pm": { "enabled": true },
-    "architect": { "enabled": true },
-    "ui": { "enabled": true },
-    "api": { "enabled": true },
-    "backend": { "enabled": true, "language": "typescript" },
-    "frontend": { "enabled": true, "framework": "react" },
-    "qa": { "enabled": true },
-    "git": { "enabled": true }
+    "root": "./devteam-workspace"
   }
 }
 ```
 
 ## 🆚 与竞品对比
 
-| 特性 | DevTeam CLI | Qoder CLI | Cursor | GitHub Copilot |
-|------|-------------|-----------|--------|----------------|
-| 多Agent协作 | ✅ 8个 | ❌ 1个 | ❌ 1个 | ❌ 1个 |
-| 完整文档 | ✅ 4类 | ❌ 无 | ❌ 无 | ❌ 无 |
-| UI设计 | ✅ 有 | ❌ 无 | ❌ 无 | ❌ 无 |
-| 测试生成 | ✅ 自动 | ❌ 手动 | ❌ 手动 | ✅ 部分 |
-| Git管理 | ✅ 自动 | ❌ 手动 | ❌ 手动 | ❌ 手动 |
-| 并行执行 | ✅ 支持 | ❌ 不支持 | ❌ 不支持 | ❌ 不支持 |
-| 交互模式 | ✅ 支持 | ❌ 不支持 | ✅ 支持 | ❌ 不支持 |
-| 记忆系统 | ✅ 支持 | ❌ 不支持 | ❌ 不支持 | ❌ 不支持 |
-| 暂停/恢复 | ✅ 支持 | ❌ 不支持 | ❌ 不支持 | ❌ 不支持 |
+| 特性 | DevTeam CLI v3.0 | Cursor | GitHub Copilot |
+|------|------------------|--------|----------------|
+| 多Agent协作 | ✅ 8个 | ❌ 1个 | ❌ 1个 |
+| 并行执行 | ✅ 3-5x加速 | ❌ | ❌ |
+| 迭代优化 | ✅ 自动修复 | ❌ | ❌ |
+| 完整文档 | ✅ 4类 | ❌ | ❌ |
+| UI设计 | ✅ 详细规范 | ❌ | ❌ |
+| 测试生成 | ✅ 完整测试 | ❌ | ✅ 部分 |
+| 代码验证 | ✅ 自动验证 | ❌ | ❌ |
+| 项目模板 | ✅ 完整模板 | ❌ | ❌ |
 
 ## 📈 性能指标
 
-- **开发速度**：传统2-3天 → DevTeam CLI 45秒
-- **效率提升**：100-300倍
-- **代码质量**：AI生成，规范统一
-- **测试覆盖率**：预计85%+
+- **开发速度**：传统2-3天 → DevTeam CLI 2-5分钟
+- **效率提升**：500-1000倍
+- **代码质量**：可直接运行，无需手动修复
+- **测试覆盖率**：预计80%+
 
 ## 🛣️ 路线图
 
-### v1.0.0 ✅
-- [x] 8个专业Agent
-- [x] 完整文档生成
-- [x] 代码生成
-- [x] 交互模式
-- [x] 记忆系统
-- [x] 状态管理
+### v3.0.0 ✅ (当前版本)
+- [x] 智能并行执行
+- [x] 迭代优化系统
+- [x] 重构Agent提示词
+- [x] 自动代码修复
+- [x] 代码质量验证
+- [x] 交互式UI优化
 
-### v1.1.0 (计划中)
-- [ ] 流式输出
-- [ ] 代码审查Agent
-- [ ] 文档生成Agent
-- [ ] 性能优化
+### v3.1.0 (计划中)
+- [ ] TypeScript迁移
+- [ ] 更多项目模板
+- [ ] 代码补全功能
+- [ ] Bug自动修复
 
-### v2.0.0 (计划中)
-- [ ] 多LLM支持（OpenAI, Gemini）
-- [ ] 插件系统
+### v4.0.0 (计划中)
 - [ ] Web界面
+- [ ] 多LLM支持
+- [ ] 插件系统
 - [ ] 团队协作
 
 ## 🤝 贡献
